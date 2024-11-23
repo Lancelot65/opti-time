@@ -6,18 +6,16 @@ from datetime import datetime, timedelta
 
 """
 TODO
-- [x] main loop with 1s wait
-- [x] func for get use it application in front off 
-- [x] add auto save into sql base or other
-- [x] auto save every x second
-- [x] check if day change
-- [ ] exploiter la db
+- [x] exploiter la db
 - [ ] rajouter des option dans le exe
-- [ ] reorganiser le print
+- [x] reorganiser le print
 - [ ] ajouter des -func au python mon.py
 - [ ] faire le temps d'écran des site utiliser
 - [ ] fonctionnalité de blocage d'app + site web
-- faire deja un optisail.screen_time
+- [ ] faire deja un optisail.screen_time
+- [ ] passer en datetime eet pas en formatter
+- [ ] rajouter plus de détails dans le full week
+
 
 
 - [ ] passer en c++ ???
@@ -30,10 +28,9 @@ class bcolors:
     CYAN = '\033[96m'
     GREEN = '\033[92m'
     YELLOW = '\033[93m'
-    FAIL = '\033[91m'
+    RED = '\033[91m'
     ENDC = '\033[0m'
     BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
 
 class database:
     def __init__(self, database_name = "screen_time.db") -> None:
@@ -69,15 +66,20 @@ class database:
             self.cur.execute(f"INSERT INTO \"{self.table_name}\" (name, time) VALUES (?, ?)", (name, 1))
 
         self.con.commit()
+    
+    def return_data(self):
+        TABLES = self.cur.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
+        output = {}
+        for table in TABLES:
+            resultats = self.cur.execute(f"SELECT name, time FROM \"{table[0]}\"").fetchall()
+            temp = {nom: time for nom, time in resultats}
+            output[table[0]] = temp
+        return output
 
     def __del__(self):
         self.cur.close()
         self.con.close()
-        print('db close')           
-     
-    def get_all_table(self):
-        self.cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        return self.cur.fetchall()      
+    
  
 class check_time_loop:
     def __init__(self) -> None:
@@ -112,43 +114,64 @@ class check_time_loop:
 class tools:
     def __init__(self) -> None:
         db = database()
-        self.tables = db.get_all_table()
-        self.json = {}
-        for table in self.tables:
-            resultats = db.cur.execute(f"SELECT name, time FROM \"{table[0]}\"").fetchall()
+        self.data = db.return_data() 
+    
+    def get_formated_time(self, seconds):
+        t = timedelta(seconds=seconds)
+        hours, reste = divmod(t.total_seconds(), 3600)
+        minutes, seconds = divmod(reste, 60)
+        return f"{f'{int(hours):02}h {int(minutes):02}m {int(seconds):02}s':<15}"
+
+    def sum_day(self, day):
+        if not day in self.data:
+            print(f"{day} is not in the database")
+            return 0
+        sum = 0
+        for app in self.data[day]:
+            sum += self.data[day][app]
+        return sum
+    
+    def sum_week(self, day):
+        output = 0
+        monday_date = self.get_previous_monday(day)
+        for i in range(7):
+            output += self.sum_day(((monday_date + timedelta(days=i)).strftime('%Y-%m-%d')))
+        return output
         
-            dictionnaire = {nom: time for nom, time in resultats}
-            self.json[table[0]] = dictionnaire
-    
-    def get_formated_time(self, secondes):
-        
-        t = timedelta(seconds=secondes)
-        
-        heures, reste = divmod(t.total_seconds(), 3600)
-        minutes, secondes = divmod(reste, 60)
-        
-        return int(heures), int(minutes), int(secondes)
-    
-    
-    
-    def print(self, date):
-        for app in self.json[date]:
-            heures, minutes, secondes = self.get_formated_time(self.json[date][app])
-            print(f"{bcolors.CYAN}{app:<10}{bcolors.ENDC}{bcolors.BLACK}{f'{heures:02}h {minutes:02}m {secondes:02}s':<15}{bcolors.ENDC}")
-            # print(app, "   ", )
-    
-    def all_print(self):
-        total = 0
-        for app in self.json[datetime.today().strftime("%Y-%m-%d")]:
-            total += self.json[datetime.today().strftime("%Y-%m-%d")][app]
-        heures, minutes, secondes = self.get_formated_time(total)
-        print(f"{bcolors.BOLD}Day's screen-time{bcolors.ENDC}", f"{f"{heures:23}h {minutes:02}m {secondes:02}s":<15}")
+    def print_day(self, day):
+        if not day in self.data:
+            print(f"{day} is not in the database")
+            return
+        print(f"Day's screen-time {21*' '}{bcolors.BLACK}{self.get_formated_time(self.sum_day(day))}{bcolors.ENDC}")
+        print("─"*50)
+        for app in self.data[day]:
+            print(f"{bcolors.CYAN}{app:<39}{bcolors.ENDC}{bcolors.BLACK}{self.get_formated_time(self.data[day][app])}{bcolors.ENDC}")
+
         print("─"*50)
         
-        self.print(datetime.today().strftime("%Y-%m-%d"))
-        
+    
+    def get_previous_monday(self, date_str):
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+        days_to_monday = date_obj.weekday() % 7
+        previous_monday = date_obj - timedelta(days=days_to_monday)    
+        return previous_monday
+    
+    def print_week(self, date_str):
+        print(f"Week's screen-time {20*' '}{bcolors.BLACK}{self.get_formated_time(self.sum_week(date_str))}{bcolors.ENDC}")
         print("─"*50)
+        
+        monday_date = self.get_previous_monday(date_str)
+        for i in range(7):
+            days = monday_date + timedelta(days=i)
+            print(f"{bcolors.BLUE}{days.strftime('%a')}{bcolors.ENDC}"      , end='   ')
+            print(f"{bcolors.CYAN}{days.strftime('%y-%m-%d')}{bcolors.ENDC}", end=25*' ')
+            
+            if days.strftime('%Y-%m-%d') in self.data:
+                print(f"{bcolors.BLACK}{self.get_formated_time(self.sum_day(days.strftime('%Y-%m-%d')))}{bcolors.ENDC}")
+            else:
+                print(f"{bcolors.BLACK}00h 00m 00s{bcolors.ENDC}")
+        print("─"*50)
+        
         
 
-# tools().all_print()
-check_time_loop().stop_by_user()
+tools().print_day('2024-11-23')
