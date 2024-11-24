@@ -13,3 +13,8 @@ venv/
 # Environment variables
 .env
 *.bat
+
+# database
+*.db
+*.json
+.gitignore
