@@ -1,13 +1,6 @@
-import argparse
+# import subprocess
 
-def main(option, autre_option):
-    print(f"Option: {option}")
-    print(f"Autre option: {autre_option}")
+# process = subprocess.Popen(['python', 'script.py'], creationflags=subprocess.DETACHED_PROCESS)
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Description de votre script.")
-    parser.add_argument('-option', type=str, required=True, help='Description de l\'option')
-    parser.add_argument('-autre', type=str, required=True, help='Description de l\'autre option')
+# print(process)
 
-    args = parser.parse_args()
-    main(args.option, args.autre)

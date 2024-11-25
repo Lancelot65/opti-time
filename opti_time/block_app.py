@@ -74,9 +74,7 @@ class setting:
     
     def get_app(self):
         return [app for app in self.data]
-    
-    
-    
+        
 
 class block_app:
     def __init__(self) -> None:

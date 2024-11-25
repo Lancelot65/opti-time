@@ -28,6 +28,7 @@ class database:
         row = self.cur.fetchone()
 
         if row:
+            print(row[0])
             new_time = row[0] + 1
             self.cur.execute(f"UPDATE \"{self.table_name}\" SET time = ? WHERE name = ?", (new_time, name))
         else:

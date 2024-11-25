@@ -4,9 +4,14 @@ from opti_time.display import displays, INVALID_DAY, INVALID_FORMAT
 from opti_time.block_app import setting, NOT_FIND, OK, block_app
 from opti_time.screen_time import screen_time
 from time import time, sleep
+import subprocess
 
 """TODO
 - [ ] Better interface
+- [ ] check if loop already start
+- [ ] confirm starting of loop
+- [ ] reorganise projects
+- [ ] rajouyter des log
 """
 
 parser = argparse.ArgumentParser(description='Opti_time')
@@ -17,10 +22,10 @@ parser.add_argument('--day_time', '-dt', type=str, help='date (default=now)')
 parser.add_argument('--week_time', '-wt', type=str, help='date (default=now)')
 parser.add_argument('--remove_app', '-ra', type=str)
 parser.add_argument('--add_app', '-aa', type=str)
-parser.add_argument('--get_app', '-ga')
-parser.add_argument('--start_time', '-st')
-parser.add_argument('--start_block', '-sb')
-parser.add_argument('--start_all', '-sa')
+parser.add_argument('--get_app', '-ga', action='store_true')
+parser.add_argument('--start_time', '-st', action='store_true')
+parser.add_argument('--start_block', '-sb', action='store_true')
+parser.add_argument('--start_all', '-sa', action='store_true')
 
 
 args = parser.parse_args()
@@ -55,22 +60,10 @@ if args.get_app:
     print(setting().get_app())
     
 if args.start_time:
-    pass
-    # lancer la boucle
-    # screen_time().loop()
+    process = subprocess.Popen(['python', 'time_loop.py'], creationflags=subprocess.DETACHED_PROCESS)
 
 if args.start_block:
-    pass
-    # lancer la boucle
-    # block_app().loop()
+    process = subprocess.Popen(['python', 'block_loop.py'], creationflags=subprocess.DETACHED_PROCESS)
 
 if args.start_all:
-    pass
-
-    # block_app_ = block_app()
-    # screen_time_ = screen_time()
-    # while True:
-    #     sleep(max(0, 1 - (time() - past_time)))
-    #     block_app_.update()
-    #     screen_time_.update()
-    #     past_time = time()
+    process = subprocess.Popen(['python', 'all_loop.py'], creationflags=subprocess.DETACHED_PROCESS)
