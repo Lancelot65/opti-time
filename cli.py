@@ -8,8 +8,6 @@ import subprocess
 
 """TODO
 - [ ] Better interface
-- [ ] check if loop already start
-- [ ] confirm starting of loop
 - [ ] reorganise projects
 - [ ] rajouyter des log
 """
@@ -60,10 +58,14 @@ if args.get_app:
     print(setting().get_app())
     
 if args.start_time:
-    process = subprocess.Popen(['python', 'time_loop.py'], creationflags=subprocess.DETACHED_PROCESS)
+    sleep(3)
+    subprocess.Popen(['python', 'time_loop.py'])#, creationflags=subprocess.DETACHED_PROCESS)
 
 if args.start_block:
-    process = subprocess.Popen(['python', 'block_loop.py'], creationflags=subprocess.DETACHED_PROCESS)
+    sleep(3)
+    subprocess.Popen(['python', 'block_loop.py'])#, creationflags=subprocess.DETACHED_PROCESS)
 
 if args.start_all:
-    process = subprocess.Popen(['python', 'all_loop.py'], creationflags=subprocess.DETACHED_PROCESS)
+    subprocess.Popen(['python', 'block_loop.py'])#, creationflags=subprocess.DETACHED_PROCESS)
+    sleep(3)
+    subprocess.Popen(['python', 'time_loop.py'])#, creationflags=subprocess.DETACHED_PROCESS)
